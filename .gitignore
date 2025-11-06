@@ -1,0 +1,27 @@
+# Compiled binaries
+bin/
+*.o
+*.exe
+
+# CUDA build artifacts
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
