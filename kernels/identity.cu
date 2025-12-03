@@ -10,12 +10,8 @@ void memoryCopyCPU(const float* input, float* output, int n) {
     }
 }
 
-// TODO: CUDA kernel implementation (basic memory copy)
 // This is a simple kernel to understand memory access patterns
 __global__ void memoryCopyKernel(const float* input, float* output, int n) {
-    // TODO: Implement basic memory copy kernel
-    // Each thread copies one element
-    // This helps understand global memory access patterns
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < n){
         output[idx] = input[idx];

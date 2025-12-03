@@ -1,4 +1,5 @@
 #include "../common/utils.h"
+// #include <__clang_cuda_builtin_vars.h>
 
 #define WIDTH 1024  // Matrix dimension (WIDTH x WIDTH)
 #define TILE_SIZE 16  // Tile size for shared memory optimization
@@ -16,12 +17,21 @@ void matmulCPU(const float* A, const float* B, float* C, int width) {
     }
 }
 
-// TODO: CUDA kernel implementation (basic version)
-// Each thread computes one element of the result matrix
+
 __global__ void matmulKernel(const float* A, const float* B, float* C, int width) {
-    // TODO: Implement matrix multiplication kernel
-    // Hint: Calculate row and col from thread indices
-    // C[row][col] = sum of A[row][k] * B[k][col] for all k
+    // TODO: also try the uncoalseced version and profile with ncu
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    float sum = 0;
+    for (int i = 0; i < width; i++){
+        float a = A[row * width + i];
+        float b = B[i * width + col];
+
+        sum += a * b;
+    }
+
+    C[row * width + col] = sum;
 }
 
 // TODO: CUDA kernel with tiled optimization (advanced)
