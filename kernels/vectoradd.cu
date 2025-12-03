@@ -1,4 +1,5 @@
 #include "../common/utils.h"
+// #include <__clang_cuda_builtin_vars.h>
 
 #define N 1048576  // 1M elements
 
@@ -14,6 +15,13 @@ void vectorAddCPU(const float* a, const float* b, float* c, int n) {
 __global__ void vectorAddKernel(const float* a, const float* b, float* c, int n) {
     // TODO: Implement vector addition kernel
     // Hint: Calculate global thread index and add corresponding elements
+    const uint x = blockIdx.x * blockDim.x + threadIdx.x;
+    if (x < n){
+        c[x] = a[x] + b[x];
+    }
+    
+
+
 }
 
 int main() {
@@ -54,6 +62,8 @@ int main() {
     GpuTimer gpu_timer;
     gpu_timer.start();
     vectorAddKernel<<<gridSize, blockSize>>>(d_a, d_b, d_c, N);
+    // Catch any kernel launch/runtime errors
+    cudaCheck(cudaGetLastError());
     gpu_timer.stop();
     float gpu_time = gpu_timer.elapsed();
 

@@ -1,4 +1,5 @@
 #include "../common/utils.h"
+// #include <__clang_cuda_builtin_vars.h>
 
 #define N 1048576  // 1M elements
 
@@ -15,6 +16,10 @@ __global__ void memoryCopyKernel(const float* input, float* output, int n) {
     // TODO: Implement basic memory copy kernel
     // Each thread copies one element
     // This helps understand global memory access patterns
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n){
+        output[idx] = input[idx];
+    }
 }
 
 // TODO: CUDA kernel with coalesced access (optimization)
@@ -22,6 +27,7 @@ __global__ void memoryCopyKernel(const float* input, float* output, int n) {
 __global__ void memoryCopyCoalescedKernel(const float* input, float* output, int n) {
     // TODO: Implement with coalesced memory access
     // Use vectorized loads/stores (float4) for better bandwidth
+    
 }
 
 int main() {

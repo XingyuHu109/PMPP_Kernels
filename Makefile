@@ -4,7 +4,7 @@
 NVCC = nvcc
 
 # Compiler flags
-NVCC_FLAGS = -O3 -arch=sm_70 -std=c++11
+NVCC_FLAGS = -O0 -arch=sm_75 -std=c++11
 
 # Directories
 KERNEL_DIR = kernels
@@ -29,7 +29,7 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 # Pattern rule for building kernels
-$(BIN_DIR)/%: $(KERNEL_DIR)/%.cu $(COMMON_SRC) $(COMMON_HDR)
+$(BIN_DIR)/%: $(KERNEL_DIR)/%.cu $(COMMON_SRC) $(COMMON_HDR) | $(BIN_DIR)
 	@echo "Building $*..."
 	$(NVCC) $(NVCC_FLAGS) $< $(COMMON_SRC) -o $@
 
