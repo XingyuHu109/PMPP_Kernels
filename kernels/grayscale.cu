@@ -1,4 +1,5 @@
 #include "../common/utils.h"
+// #include <__clang_cuda_builtin_vars.h>
 #include <random>
 
 #define IMAGE_WIDTH 1920
@@ -24,12 +25,20 @@ void rgbToGrayscaleCPU(const unsigned char* rgb, unsigned char* gray,
     }
 }
 
-// TODO: CUDA kernel implementation
-__global__ void rgbToGrayscaleKernel(const unsigned char* rgb, unsigned char* gray,
-                                      int width, int height) {
-    // TODO: Implement RGB to grayscale conversion kernel
-    // Hint: Each thread processes one pixel
-    // Use the weighted sum formula for conversion
+__global__ void rgbToGrayscaleKernel(const unsigned char* rgb, unsigned char* gray, int width, int height) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row < height && col < width){
+        // Data given is in [H, W, C] format
+        int startIndex = (row * width + col) * CHANNELS;
+        
+        unsigned char r = rgb[startIndex];
+        unsigned char g = rgb[startIndex + 1];
+        unsigned char b = rgb[startIndex + 2];
+
+        gray[row * width + col] = (unsigned char)(r * R_WEIGHT + g * G_WEIGHT + b * B_WEIGHT);
+
+    }
 }
 
 int main() {
