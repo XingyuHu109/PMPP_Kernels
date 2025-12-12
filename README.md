@@ -44,11 +44,14 @@ Run unimplemented kernels to see them fail, implement the `// TODO:` sections, t
 ## Learning Order
 
 1. **vectoradd** - Thread indexing basics
-2. **identity** - Memory coalescing
-3. **matmul** - Shared memory and tiling
-4. **vectorsum** - Parallel reduction
-5. **histogram** - Atomic operations
-6. Continue with conv2d, grayscale, prefixsum, sort
+2. **identity** - Memory access patterns + coalescing
+3. **grayscale** - 2D indexing (one thread per pixel)
+4. **vectorsum** - Parallel reduction (shared memory + sync)
+5. **matmul** - Shared memory tiling (2D blocks)
+6. **histogram** - Atomic operations + contention
+7. **conv2d** - Stencil + boundaries (+ constant memory)
+8. **prefixsum** - Parallel scan (hierarchical)
+9. **sort** - Bitonic sort (hardest)
 
 ## Kernel Overview
 
