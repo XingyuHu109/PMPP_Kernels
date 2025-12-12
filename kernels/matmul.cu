@@ -2,7 +2,7 @@
 // #include <__clang_cuda_builtin_vars.h>
 
 #define WIDTH 1024  // Matrix dimension (WIDTH x WIDTH)
-#define TILE_SIZE 16  // Tile size for shared memory optimization
+#define TILE_SIZE 32  // Tile size for shared memory optimization
 
 // CPU implementation
 void matmulCPU(const float* A, const float* B, float* C, int width) {
@@ -34,12 +34,81 @@ __global__ void matmulKernel(const float* A, const float* B, float* C, int width
     C[row * width + col] = sum;
 }
 
-// TODO: CUDA kernel with tiled optimization (advanced)
+
+__global__ void matmulUncoalsecedKernel(const float *A, const float *B, float *C, int width){
+    // int row = blockIdx.y * blockDim.y + threadIdx.y;
+    // int col = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    // float sum = 0;
+    // for (int i = 0; i < width; i++){
+    //     float a = A[col * width + i];
+    //     float b = B[i * width + row];
+
+    //     sum += a * b;
+    // }
+
+    // C[col * width + row] = sum;
+
+    // This above version works, but I will provide a more intuitive version(just flipping row and col)
+    int col = blockIdx.y * blockDim.y + threadIdx.y;
+    int row = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    float sum = 0;
+    for (int i = 0; i < width; i++){
+        float a = A[row * width + i];
+        float b = B[i * width + col];
+
+        sum += a * b;
+    }
+
+    C[row * width + col] = sum;
+
+
+}
+
 // Uses shared memory to improve memory access patterns
 __global__ void matmulTiledKernel(const float* A, const float* B, float* C, int width) {
-    // TODO: Implement tiled matrix multiplication with shared memory
-    // Hint: Load tiles of A and B into shared memory
-    // This reduces global memory accesses significantly
+    // TODO: check for memory coalescing and bank conflict
+    __shared__ float tileA[TILE_SIZE][TILE_SIZE ];
+    __shared__ float tileB[TILE_SIZE][TILE_SIZE ];
+
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    float intermidateResult = 0.0;
+
+    for (int i = 0; i < ((width + TILE_SIZE - 1) / TILE_SIZE); i++){
+        // load into shared memory
+        int rowA = row;
+        int colA = i * TILE_SIZE + threadIdx.x;
+        if (rowA < width && colA < width){
+            tileA[threadIdx.y][threadIdx.x] = A[rowA * width + colA];
+        }else{
+            tileA[threadIdx.y][threadIdx.x] = 0.0;
+        }
+
+        int rowB = i * TILE_SIZE + threadIdx.y;
+        int colB = col;
+        if (rowB < width && colB < width){
+            tileB[threadIdx.y][threadIdx.x] = B[rowB * width + colB];
+        }else{
+            tileB[threadIdx.y][threadIdx.x] = 0.0;
+        }
+
+        __syncthreads();
+
+        // for a single element in the result matrix, calculate the partial sum in this iteration
+        for (int j = 0; j < TILE_SIZE; j++){
+            intermidateResult += tileA[threadIdx.y][j] * tileB[j][threadIdx.x];
+        }
+
+        __syncthreads();
+
+    } 
+
+    if (row < width && col < width){
+        C[row * width + col] = intermidateResult;
+    }
 }
 
 int main() {
@@ -84,7 +153,9 @@ int main() {
 
     GpuTimer gpu_timer;
     gpu_timer.start();
-    matmulKernel<<<gridSize, blockSize>>>(d_A, d_B, d_C, WIDTH);
+    // matmulKernel<<<gridSize, blockSize>>>(d_A, d_B, d_C, WIDTH);
+    // matmulUncoalsecedKernel<<<gridSize, blockSize>>>(d_A, d_B, d_C, WIDTH);
+    matmulTiledKernel<<<gridSize, blockSize>>>(d_A, d_B, d_C, WIDTH);
     gpu_timer.stop();
     float gpu_time = gpu_timer.elapsed();
 
